@@ -1,6 +1,8 @@
 # imports
 import requests
 from bs4 import BeautifulSoup
+import numpy as np
+import pandas as pd
 import AO3
 
 # define fic class
@@ -30,10 +32,15 @@ class Fic:
 
     def __repr__(self):
         return f"Fic#{self.work_id} {self.link}\n {self.title} by {self.authors}\n {self.rating} / {self.warnings}\n {self.fandoms}\n {self.ships}\n {self.characters}\n {self.freeforms}\n {self.word_count} -- {self.chapter_count}\n {self.series}\n {self.kudos} kudos / {self.hits} hits\n {self.last_update} / {self.last_visit}\n"
+    
+    def ficToList(self) -> list: # add a reverse?
+        return [self.work_id, self.link, self.title, self.authors, self.rating, self.warnings, self.fandoms, self.ships, self.characters, self.freeforms, self.word_count, self.chapter_count, self.series, self.kudos, self.hits, self.last_update, self.last_visit]
+
+# for now, everything runs when i run this file. might make these functions to run in a program, not as one, later.
 
 ### DIRECT INTERACTIONS WITH AO3
 # using a local html file for now; interacting with AO3 to be configured later
-with open('mfl-page1sample.html', encoding='utf-8') as file:
+with open('files/mfl-page1sample.html', encoding='utf-8') as file:
     sample = file.read()
 
 ### PARSING HTML TO FIC OBJECT
@@ -42,11 +49,14 @@ soup = BeautifulSoup(sample, 'html.parser')
 
 # on mfl page, fics are list items (li) in an ordered list (ol)
 ficsonpage = soup.find('ol', 'reading work index group').find_all('li', role='article')
-print(len(ficsonpage), ' fics found\n-----------')
+# need to account for deleted + mystery fics, right?
+print(len(ficsonpage), ' fics found\n-----------------')
+
+library_real = [] # objects
+library = [] # lists for pds
 
 # parse each fic on the page into a fic object
-# ...for what? keep a local list of them all?
-# also remember to add a format-to-csv function to class, if not innate to pandas?
+# ...for what? keep a local list of them all? -> is the object needed for anything or is it redundant?
 for fic in ficsonpage:
     #print(fic.prettify())
 
@@ -55,7 +65,11 @@ for fic in ficsonpage:
 
     tcard = fic.find('h4', class_='heading').find_all('a')
     title = tcard[0].text
-    author = tcard[1].text # will it say anon? check if >1?
+    author = 'Anonymous'
+    if len(tcard) > 1:
+        author = tcard[1].text
+        # >1 author? maybe can just make this a loop
+        # what if orphaned?
 
     # it is always required and always first in required tags
     rating = fic.find('ul', class_='required-tags').find('li').text
@@ -68,7 +82,6 @@ for fic in ficsonpage:
     for fandom in fic.find('h5', class_='fandoms heading').find_all('a'):
         fandoms.append(fandom.text)
 
-    # what if there are no ships/characters/freeforms? should be fine but double-check.
     ships = []
     for ship in fic.find_all('li', class_='relationships'):
         ships.append(ship.text)
@@ -96,6 +109,15 @@ for fic in ficsonpage:
     visit_history = [marked_blurb[1], marked_blurb[5].strip()]
 
     logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, visit_history)
-    print(logged_fic)
-    print('----------------------------------------------------------------')
-    input("Press Enter to continue...")
+    library_real.append(logged_fic)
+    library.append(logged_fic.ficToList())
+    #print(logged_fic)
+    #print('----------------------------------------------------------------')
+    #input("Press Enter to continue...")
+
+### DATA MANIPULATION
+archive = pd.DataFrame(library, columns=['work_id', 'link', 'title', 'author', 'rating', 'warnings', 'fandoms', 'ships', 'characters', 'freeforms', 'word_count', 'chapter_count', 'series', 'kudos', 'hits', 'last_update', 'visit_history'])
+pd.set_option("display.max_columns", None)
+# doesn't print to the terminal well; can i put it in notepad or a csv?
+#print(archive.head())
+#print(archive[0:1])
