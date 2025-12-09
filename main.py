@@ -121,3 +121,4 @@ pd.set_option("display.max_columns", None)
 # doesn't print to the terminal well; can i put it in notepad or a csv?
 #print(archive.head())
 #print(archive[0:1])
+archive.to_csv('./files/mfl-sample.csv')
