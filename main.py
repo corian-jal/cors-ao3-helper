@@ -99,4 +99,3 @@ for fic in ficsonpage:
     print(logged_fic)
     print('----------------------------------------------------------------')
     input("Press Enter to continue...")
-    break
