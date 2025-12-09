@@ -41,8 +41,8 @@ with open('mfl-page1sample.html', encoding='utf-8') as file:
 soup = BeautifulSoup(sample, 'html.parser')
 
 # on mfl page, fics are list items (li) in an ordered list (ol)
-ordlist = soup.find('ol', 'reading work index group') 
-ficsonpage = ordlist.find_all('li')
+ficsonpage = soup.find('ol', 'reading work index group').find_all('li', role='article')
+print(len(ficsonpage), ' fics found\n-----------')
 
 # parse each fic on the page into a fic object
 # ...for what? keep a local list of them all?
@@ -53,48 +53,50 @@ for fic in ficsonpage:
     id = ''.join(filter(str.isnumeric, fic['id']))
     link = 'https://archiveofourown.org/works/' + id
 
-    tcard = fic.find('h4', 'heading').find_all('a')
+    tcard = fic.find('h4', class_='heading').find_all('a')
     title = tcard[0].text
     author = tcard[1].text # will it say anon? check if >1?
 
     # it is always required and always first in required tags
-    rating = fic.find('ul', 'required-tags').find('li').text
+    rating = fic.find('ul', class_='required-tags').find('li').text
 
     warnings = []
-    for warning in fic.find_all('li', 'warnings'):
+    for warning in fic.find_all('li', class_='warnings'):
         warnings.append(warning.text)
 
     fandoms = []
-    for fandom in fic.find('h5', 'fandoms heading').find_all('a'):
+    for fandom in fic.find('h5', class_='fandoms heading').find_all('a'):
         fandoms.append(fandom.text)
 
     # what if there are no ships/characters/freeforms? should be fine but double-check.
     ships = []
-    for ship in fic.find_all('li', 'relationships'):
+    for ship in fic.find_all('li', class_='relationships'):
         ships.append(ship.text)
 
     charas = []
-    for char in fic.find_all('li', 'characters'):
+    for char in fic.find_all('li', class_='characters'):
         charas.append(char.text)
 
     freeforms = []
-    for tag in fic.find_all('li', 'freeforms'):
+    for tag in fic.find_all('li', class_='freeforms'):
         freeforms.append(tag.text)
 
-    word_count = fic.find('dd', 'words').text
-    chapter_count = fic.find('dd', 'chapters').text
+    word_count = fic.find('dd', class_='words').text
+    chapter_count = fic.find('dd', class_='chapters').text
     
     series = 'None'
-    series_maybe = fic.find('ul', 'series')
+    series_maybe = fic.find('ul', class_='series')
     if series_maybe != None:
         series = series_maybe.text.strip()
 
-    kudos = fic.find('dd', 'kudos').text
-    hits = fic.find('dd', 'hits').text
-    last_update = fic.find('p', 'datetime').text #make some kind of real date object?
-    marked_blurb = fic.find('h4', 'viewed heading').text.splitlines()
+    kudos = fic.find('dd', class_='kudos').text
+    hits = fic.find('dd', class_='hits').text
+    last_update = fic.find('p', class_='datetime').text #make some kind of real date object?
+    marked_blurb = fic.find('h4', class_='viewed heading').text.splitlines()
     visit_history = [marked_blurb[1], marked_blurb[5].strip()]
 
     logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, visit_history)
     print(logged_fic)
+    print('----------------------------------------------------------------')
+    input("Press Enter to continue...")
     break
