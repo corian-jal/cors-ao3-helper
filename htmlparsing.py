@@ -86,7 +86,7 @@ def mflPageToFicList(sample : str) -> list:
         for tag in fic.find_all('li', class_='freeforms'):
             freeforms.append(tag.text)
 
-        word_count = fic.find('dd', class_='words').text
+        word_count = int(fic.find('dd', class_='words').text.replace(',',''))
         chapter_count = fic.find('dd', class_='chapters').text
         
         series = 'None'
@@ -94,8 +94,8 @@ def mflPageToFicList(sample : str) -> list:
         if series_maybe != None:
             series = series_maybe.text.strip()
 
-        kudos = fic.find('dd', class_='kudos').text
-        hits = fic.find('dd', class_='hits').text
+        kudos = int(fic.find('dd', class_='kudos').text.replace(',',''))
+        hits = int(fic.find('dd', class_='hits').text.replace(',',''))
         last_update = fic.find('p', class_='datetime').text #make some kind of real date object?
         marked_blurb = fic.find('h4', class_='viewed heading').text.splitlines()
         last_visit = marked_blurb[1] #make some kind of real date object?
