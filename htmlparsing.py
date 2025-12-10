@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 class Fic:
     def __init__(self, id, link, title, authors, rating, warnings, fandoms, 
                  ships, characters, freeforms, word_count, chapter_count, 
-                 series, kudos, hits, last_update, last_visit) -> None:
+                 series, kudos, hits, last_update, last_visit, visit_num) -> None:
         self.work_id = id
         self.link = link
         # do i want to track if it's restricted?
@@ -25,13 +25,14 @@ class Fic:
         self.kudos = kudos
         self.hits = hits
         self.last_update = last_update
-        self.last_visit = last_visit # just date or do i want to keep visit#? standardize format?
+        self.last_visit = last_visit
+        self.visit_num = visit_num
 
     def __repr__(self):
-        return f"Fic#{self.work_id} {self.link}\n {self.title} by {self.authors}\n {self.rating} / {self.warnings}\n {self.fandoms}\n {self.ships}\n {self.characters}\n {self.freeforms}\n {self.word_count} -- {self.chapter_count}\n {self.series}\n {self.kudos} kudos / {self.hits} hits\n {self.last_update} / {self.last_visit}\n"
+        return f"Fic#{self.work_id} {self.link}\n {self.title} by {self.authors}\n {self.rating} / {self.warnings}\n {self.fandoms}\n {self.ships}\n {self.characters}\n {self.freeforms}\n {self.word_count} -- {self.chapter_count}\n {self.series}\n {self.kudos} kudos / {self.hits} hits\n {self.last_update} / {self.last_visit} {self.visit_num}\n"
     
     def ficToList(self) -> list: # add a reverse?
-        return [self.work_id, self.link, self.title, self.authors, self.rating, self.warnings, self.fandoms, self.ships, self.characters, self.freeforms, self.word_count, self.chapter_count, self.series, self.kudos, self.hits, self.last_update, self.last_visit]
+        return [self.work_id, self.link, self.title, self.authors, self.rating, self.warnings, self.fandoms, self.ships, self.characters, self.freeforms, self.word_count, self.chapter_count, self.series, self.kudos, self.hits, self.last_update, self.last_visit, self.visit_num]
 
 
 def mflPageToFicList(sample : str) -> list:
@@ -97,9 +98,10 @@ def mflPageToFicList(sample : str) -> list:
         hits = fic.find('dd', class_='hits').text
         last_update = fic.find('p', class_='datetime').text #make some kind of real date object?
         marked_blurb = fic.find('h4', class_='viewed heading').text.splitlines()
-        visit_history = [marked_blurb[1], marked_blurb[5].strip()]
+        last_visit = marked_blurb[1] #make some kind of real date object?
+        visit_num = marked_blurb[5].strip()
 
-        logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, visit_history)
+        logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, last_visit, visit_num)
         library_real.append(logged_fic)
         library.append(logged_fic.ficToList())
         #print(logged_fic)

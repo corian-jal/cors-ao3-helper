@@ -14,18 +14,18 @@ print("Hi! Cor's AO3 Helper is now running. For now, you can only run sample tes
 
 while True:
     for option in options:
-        print('   ', option)
+        print('  ', option)
     prompt = input("> ")
     match prompt:
-        case '1':
+        case '1': # sample testing
             sample = ao3int.getMFLSample()
             library = htp.mflPageToFicList(sample)
             name = input('What should I name this file?\n> ')
             filename = './files/' + name + '.csv'
             dm.createArchive(library, filename)
             print("Alright, I've exported '", filename, "'. What else would you like to do?")
-        case '2':
+        case '2': # exit
             print("Understood! I'm closing now, so goodbye.")
             break
-        case _:
+        case _: # what?
             print("Sorry, I didn't understand. Please try again?")
