@@ -1,6 +1,7 @@
 ### PARSING HTML TO FIC OBJECT
 # given html(s), extract relevant fic information
 from bs4 import BeautifulSoup
+import json
 from datetime import datetime
 
 # define fic class
@@ -35,6 +36,17 @@ class Fic:
     def ficToList(self) -> list: # add a reverse?
         return [self.work_id, self.link, self.title, self.authors, self.rating, self.warnings, self.fandoms, self.ships, self.characters, self.freeforms, self.word_count, self.chapter_count, self.series, self.kudos, self.hits, self.last_update, self.last_visit, self.visit_num]
 
+with open('./files/synonyms.json') as f:
+    synonyms = json.load(f)
+
+def normalizeTags(tags : list) -> list:
+    new_tags = []
+    for tag in tags:
+        tag = tag.replace('(Anime)', '(Anime & Manga)').replace('(Manga)', '(Anime & Manga)')
+        if tag in synonyms.keys():
+            tag = synonyms.get(tag)
+        new_tags.append(tag)
+    return list(dict.fromkeys(new_tags)) #remove dups and maintain order?
 
 def mflPageToFicList(sample : str) -> list:
     # beautifulsoup parsing
@@ -74,18 +86,22 @@ def mflPageToFicList(sample : str) -> list:
         fandoms = []
         for fandom in fic.find('h5', class_='fandoms heading').find_all('a'):
             fandoms.append(fandom.text)
+        fandoms = normalizeTags(fandoms)
 
         ships = []
         for ship in fic.find_all('li', class_='relationships'):
             ships.append(ship.text)
+        ships = normalizeTags(ships)
 
         charas = []
         for char in fic.find_all('li', class_='characters'):
             charas.append(char.text)
+        charas = normalizeTags(charas)
 
         freeforms = []
         for tag in fic.find_all('li', class_='freeforms'):
             freeforms.append(tag.text)
+        freeforms = normalizeTags(freeforms)
 
         word_count = int(fic.find('dd', class_='words').text.replace(',',''))
         chapter_count = fic.find('dd', class_='chapters').text
