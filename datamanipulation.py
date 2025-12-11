@@ -24,10 +24,19 @@ def printArchive(archive : pd.DataFrame, cols : list, rows : int) -> None:
         rows = 0
     print(archive.loc[:, cols].head(rows))
 
+def filterItem(archive : pd.DataFrame, col : str, val, include : bool) -> pd.DataFrame:
+    # works for full and partial
+    if include:
+        return archive[archive[col].str.contains(val)]
+    else:
+        return archive[~(archive[col].str.contains(val))]
+
+def filterRange(archive : pd.DataFrame, col : str, start : int, end : int) -> pd.DataFrame:
+    # inclusive
+    return archive[(archive[col] >= start) & (archive[col] <= end)]
+
 def sortBy(archive : pd.DataFrame, col : str, asc : bool) -> pd.DataFrame:
     return archive.sort_values(by=col, ascending=asc)
-
-# filter functions, essentially "does x appear in y column"
 
 def storeArchive(archive : pd.DataFrame, filename : str) -> None:
     archive.to_csv(filename)

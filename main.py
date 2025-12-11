@@ -41,21 +41,28 @@ def dmLoop() -> None:
                 print("Successfully reloaded archive.")
 
             case 'f': #filter
-                print("Not implemented for now. Sorry.")
+                col_name = input("What column would you like to filter on?\n> ")
+                mode = input("Would you like to filter for an [i]tem or [r]ange?\n> ")
+                match mode:
+                    case 'i':
+                        val = input("What item would you like to search?\n> ")
+                        inc = input("Would you like to include or exclude the item? Enter y for include, n for exclude.\n> ").lower().startswith('y')
+                        archive = dm.filterItem(archive, col_name, val, inc)
+                    case 'r':
+                        start = int(input("Enter the lower range number, inclusive.\n> "))
+                        end = int(input("Enter the higher range number, inclusive.\n> "))
+                        archive = dm.filterRange(archive, col_name, start, end)
+                    case _:
+                        print("[Wrong buzzer noise.] Try again.")
+                print("Okay, found ", dm.countRows(archive), " results.")
+                dm.printArchive(archive, ['work_id', 'title', 'author', col_name], dm.countRows(archive))
 
             case 'o': #sort
                 #check if it's a sortable col here or in dm? > honestly, you should be able to sort any col you want; ymmv if you choose a weird option.
                 col_name = input("Would column would you like to sort on?\n> ")
-                asc_val = input("Would you like it in ascending order? y/n\n> ")
-                match asc_val:
-                    case 'y':
-                        asc = True
-                    case 'n':
-                        asc = False
-                    case _:
-                        print("[Wrong buzzer noise.] Try again.")
+                asc = input("Would you like it in ascending order? y/n\n> ").lower().startswith('y')
                 archive = dm.sortBy(archive, col_name, asc)
-                dm.printArchive(archive,['work_id', 'title', 'author', col_name], dm.countRows(archive))
+                dm.printArchive(archive, ['work_id', 'title', 'author', col_name], dm.countRows(archive))
 
             case 'c': #count
                 print("Number of entries: ", dm.countRows(archive))
