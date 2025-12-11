@@ -14,6 +14,9 @@ def loadArchive(filename : str) -> pd.DataFrame:
 def printColumns(archive : pd.DataFrame) -> None:
     print(list(archive.columns))
 
+# if i save each html, i can output them to a file and get something readable in browser, though the links don't work. 
+# can i like that to ao3 somehow? or format it? or make at least a link to the fic work?
+
 def countRows(archive :pd.DataFrame) -> int:
     return archive.shape[0]
 
@@ -34,6 +37,8 @@ def filterItem(archive : pd.DataFrame, col : str, val, include : bool) -> pd.Dat
 def filterRange(archive : pd.DataFrame, col : str, start : int, end : int) -> pd.DataFrame:
     # inclusive
     return archive[(archive[col] >= start) & (archive[col] <= end)]
+
+# or filtering is a wishlist item
 
 def sortBy(archive : pd.DataFrame, col : str, asc : bool) -> pd.DataFrame:
     return archive.sort_values(by=col, ascending=asc)

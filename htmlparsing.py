@@ -116,7 +116,10 @@ def mflPageToFicList(sample : str) -> list:
         last_update = datetime.strptime(fic.find('p', class_='datetime').text, '%d %b %Y') #19 Aug 2025
         marked_blurb = fic.find('h4', class_='viewed heading').text.splitlines()
         last_visit = datetime.strptime(marked_blurb[1][14:25], '%d %b %Y') #Last visited: 01 Dec 2025
-        visit_num = int(marked_blurb[5].strip()[8]) #Visited 5 times
+        visit_num = int(''.join(filter(str.isnumeric, marked_blurb[5].strip()))) #Visited 5 times
+
+        # if i save each html, i can output them to a file and get something readable in browser, though the links don't work. 
+        # can i link that to ao3 somehow? or format it? or make at least a link to the fic work?
 
         logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, last_visit, visit_num)
         library_real.append(logged_fic)
