@@ -1,6 +1,7 @@
 ### PARSING HTML TO FIC OBJECT
 # given html(s), extract relevant fic information
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 # define fic class
 class Fic:
@@ -96,10 +97,10 @@ def mflPageToFicList(sample : str) -> list:
 
         kudos = int(fic.find('dd', class_='kudos').text.replace(',',''))
         hits = int(fic.find('dd', class_='hits').text.replace(',',''))
-        last_update = fic.find('p', class_='datetime').text #make some kind of real date object?
+        last_update = datetime.strptime(fic.find('p', class_='datetime').text, '%d %b %Y') #19 Aug 2025
         marked_blurb = fic.find('h4', class_='viewed heading').text.splitlines()
-        last_visit = marked_blurb[1] #make some kind of real date object?
-        visit_num = marked_blurb[5].strip()
+        last_visit = datetime.strptime(marked_blurb[1][14:25], '%d %b %Y') #Last visited: 01 Dec 2025
+        visit_num = int(marked_blurb[5].strip()[8]) #Visited 5 times
 
         logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, last_visit, visit_num)
         library_real.append(logged_fic)

@@ -6,19 +6,47 @@ import ao3interactions as ao3int
 import htmlparsing as htp
 import datamanipulation as dm
 
+source : str = None
+archive : dm.pd.DataFrame = None
+dm_options = ["1 - [L]oad from CSV", "2 - [S]ave to CSV", "3 - [R]eset to Last Load", "4 - [F]ilter", 
+              "5 - S[o]rt", "6 - [C]ount", "7 - L[i]st Columns", "8 - [P]rint", "9 - Go [B]ack"]
+
 # callable methods for the main program loop
-def dmLoop(archive : dm.pd.DataFrame) -> None:
-    # give column options and check if given text is a valid column
-    # might want to rethink loop method here (carry over frames v reset?)
+def dmLoop() -> None:
+    filename = input("No archive is currently active. Please give me the name of the csv to load.\n> ")
+    source = './files/' + filename + '.csv'
+    archive = dm.loadArchive(source)
+    print("Successfully loaded archive.")
+    print("You are now in the data manipulation loop. What would you like to do?")
+
     while True:
-        prompt = input("Would you like to filter, sort, or go back?\n> ")
+        for option in dm_options:
+            print('  ', option)
+        prompt = input("> ")
+
         match prompt:
-            case 'filter':
+            case 'l': #load       
+                filename = input("Please give me the name of the csv to load.\n> ")
+                source = './files/' + filename + '.csv'
+                archive = dm.loadArchive(source)
+                print("Successfully loaded archive.")
+
+            case 's': #save
+                filename = input("What would you like to name this file?\n> ")
+                dm.storeArchive(archive, './files/' + filename + '.csv')
+                print("Successfully saved archive.")
+
+            case 'r': #reset
+                archive = dm.loadArchive(source)
+                print("Successfully reloaded archive.")
+
+            case 'f': #filter
                 print("Not implemented for now. Sorry.")
-            case 'sort':
+
+            case 'o': #sort
                 #check if it's a sortable col here or in dm? > honestly, you should be able to sort any col you want; ymmv if you choose a weird option.
                 col_name = input("Would column would you like to sort on?\n> ")
-                asc_val = input("Would you like it in ascending order? y or n\n> ")
+                asc_val = input("Would you like it in ascending order? y/n\n> ")
                 match asc_val:
                     case 'y':
                         asc = True
@@ -26,12 +54,28 @@ def dmLoop(archive : dm.pd.DataFrame) -> None:
                         asc = False
                     case _:
                         print("[Wrong buzzer noise.] Try again.")
-                new_archive = dm.sortBy(archive, col_name, asc)
-                dm.printArchive(new_archive,['work_id', 'title', 'author', col_name])
-            case 'back':
+                archive = dm.sortBy(archive, col_name, asc)
+                dm.printArchive(archive,['work_id', 'title', 'author', col_name], dm.countRows(archive))
+
+            case 'c': #count
+                print("Number of entries: ", dm.countRows(archive))
+
+            case 'i': #list cols
+                dm.printColumns(archive)
+
+            case 'p': #print archive
+                height = int(input("How many rows would you like?\n> "))
+                extend = input("Would you like columns other than id, title, and author? y/n\n> ")
+                cols = []
+                if extend == 'y':
+                    cols = (input("List each column name separated by a space, with no leading or trailing spaces.\n> ")).split(' ')
+                dm.printArchive(archive,['work_id', 'title', 'author'] + cols, height)
+
+            case 'b': #back
                 print("Alright, sending you back.")
                 break
-            case _:
+
+            case _: #what?
                 print("Sorry, I don't understand. Try again?")
 
 #main program text
@@ -45,6 +89,7 @@ while True:
     for option in options:
         print('  ', option)
     prompt = input("> ")
+    
     match prompt:
         case 'p': # get html, parse, save csv
             sample = ao3int.getMFLSample()
@@ -58,10 +103,7 @@ while True:
             print("Alright, I've exported '", filename, "'. What else would you like to do?")
 
         case 'd': # test data manipulation
-            filename = input("Please give me the name of the csv to load.\n> ")
-            archive = dm.loadArchive('./files/' + filename + '.csv')
-            print("Successfully loaded archive.")
-            dmLoop(archive)
+            dmLoop()
 
         case 'e': # exit
             print("Understood! I'm closing now, so goodbye.")
