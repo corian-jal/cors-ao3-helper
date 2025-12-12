@@ -48,14 +48,15 @@ def normalizeTags(tags : list) -> list:
         new_tags.append(tag)
     return list(dict.fromkeys(new_tags)) #remove dups and maintain order?
 
-def mflPageToFicList(sample : str) -> list:
+def mflPageToFicList(sample : str, page_num : int) -> list:
+    # how does the css associated with my account affect the html? works that are hidden? remember to account for deleted, mystery, etc works too
+
     # beautifulsoup parsing
     soup = BeautifulSoup(sample, 'html.parser')
 
     # on mfl page, fics are list items (li) in an ordered list (ol)
     ficsonpage = soup.find('ol', 'reading work index group').find_all('li', role='article')
     # need to account for deleted + mystery fics, right?
-    print(len(ficsonpage), 'fics found.')
 
     library_real = [] # objects
     library = [] # lists for pds
@@ -63,68 +64,75 @@ def mflPageToFicList(sample : str) -> list:
     # parse each fic on the page into a fic object
     # ...for what? keep a local list of them all? -> is the object needed for anything or is it redundant?
     for fic in ficsonpage:
-        #print(fic.prettify())
+        try: 
+            #print(fic.prettify())
 
-        id = ''.join(filter(str.isnumeric, fic['id']))
-        link = 'https://archiveofourown.org/works/' + id
+            id = ''.join(filter(str.isnumeric, fic['id']))
+            link = 'https://archiveofourown.org/works/' + id
 
-        tcard = fic.find('h4', class_='heading').find_all('a')
-        title = tcard[0].text
-        author = 'Anonymous'
-        if len(tcard) > 1:
-            author = tcard[1].text
-            # >1 author? maybe can just make this a loop
-            # what if orphaned?
+            tcard = fic.find('h4', class_='heading').find_all('a')
+            title = tcard[0].text
+            author = 'Anonymous'
+            if len(tcard) > 1:
+                author = tcard[1].text
+                # >1 author? maybe can just make this a loop
+                # what if orphaned?
 
-        # it is always required and always first in required tags
-        rating = fic.find('ul', class_='required-tags').find('li').text
+            # it is always required and always first in required tags
+            rating = fic.find('ul', class_='required-tags').find('li').text
 
-        warnings = []
-        for warning in fic.find_all('li', class_='warnings'):
-            warnings.append(warning.text)
+            warnings = []
+            for warning in fic.find_all('li', class_='warnings'):
+                warnings.append(warning.text)
 
-        fandoms = []
-        for fandom in fic.find('h5', class_='fandoms heading').find_all('a'):
-            fandoms.append(fandom.text)
-        fandoms = normalizeTags(fandoms)
+            fandoms = []
+            for fandom in fic.find('h5', class_='fandoms heading').find_all('a'):
+                fandoms.append(fandom.text)
+            fandoms = normalizeTags(fandoms)
 
-        ships = []
-        for ship in fic.find_all('li', class_='relationships'):
-            ships.append(ship.text)
-        ships = normalizeTags(ships)
+            ships = []
+            for ship in fic.find_all('li', class_='relationships'):
+                ships.append(ship.text)
+            ships = normalizeTags(ships)
 
-        charas = []
-        for char in fic.find_all('li', class_='characters'):
-            charas.append(char.text)
-        charas = normalizeTags(charas)
+            charas = []
+            for char in fic.find_all('li', class_='characters'):
+                charas.append(char.text)
+            charas = normalizeTags(charas)
 
-        freeforms = []
-        for tag in fic.find_all('li', class_='freeforms'):
-            freeforms.append(tag.text)
-        freeforms = normalizeTags(freeforms)
+            freeforms = []
+            for tag in fic.find_all('li', class_='freeforms'):
+                freeforms.append(tag.text)
+            freeforms = normalizeTags(freeforms)
 
-        word_count = int(fic.find('dd', class_='words').text.replace(',',''))
-        chapter_count = fic.find('dd', class_='chapters').text
-        
-        series = 'Not a part of a series.'
-        series_maybe = fic.find('ul', class_='series')
-        if series_maybe is not None:
-            series = series_maybe.text.strip()
+            word_count = int(fic.find('dd', class_='words').text.replace(',',''))
+            chapter_count = fic.find('dd', class_='chapters').text
+            
+            # might be >1 series, no series field at all if none
+            series = ['Not a part of a series.']
+            series_maybe = fic.find('ul', class_='series')
+            if series_maybe is not None:
+                series = []
+                for entry in series_maybe.find_all('li'):
+                    series.append(entry.text.strip())
 
-        kudos = int(fic.find('dd', class_='kudos').text.replace(',',''))
-        hits = int(fic.find('dd', class_='hits').text.replace(',',''))
-        last_update = datetime.strptime(fic.find('p', class_='datetime').text, '%d %b %Y') #19 Aug 2025
-        marked_blurb = fic.find('h4', class_='viewed heading').text.splitlines()
-        last_visit = datetime.strptime(marked_blurb[1][14:25], '%d %b %Y') #Last visited: 01 Dec 2025
-        visit_num = int(''.join(filter(str.isnumeric, marked_blurb[5].strip()))) #Visited 5 times
+            kudos = int(fic.find('dd', class_='kudos').text.replace(',',''))
+            hits = int(fic.find('dd', class_='hits').text.replace(',',''))
+            last_update = datetime.strptime(fic.find('p', class_='datetime').text, '%d %b %Y') #19 Aug 2025
+            marked_blurb = list(filter(lambda x: 'isit' in x, fic.find('h4', class_='viewed heading').text.replace('once', '1').splitlines()))
+            last_visit = datetime.strptime(marked_blurb[0][14:25], '%d %b %Y') #Last visited: 01 Dec 2025
+            visit_num = int(''.join(filter(str.isnumeric, marked_blurb[1].strip()))) #Visited 5 times
 
-        # if i save each html, i can output them to a file and get something readable in browser, though the links don't work. 
-        # can i link that to ao3 somehow? or format it? or make at least a link to the fic work?
+            # if i save each html, i can output them to a file and get something readable in browser, though the links don't work. 
+            # can i link that to ao3 somehow? or format it? or make at least a link to the fic work?
 
-        logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, last_visit, visit_num)
-        library_real.append(logged_fic)
-        library.append(logged_fic.ficToList())
-        #print(logged_fic)
-        #print('----------------------------------------------------------------')
-        #input("Press Enter to continue...")
+            logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, last_visit, visit_num)
+            library_real.append(logged_fic)
+            library.append(logged_fic.ficToList())
+            #print(logged_fic)
+            #print('----------------------------------------------------------------')
+            #input("Press Enter to continue...")
+        except:
+            print("Something weird happened on page " + str(page_num))
+            continue
     return library

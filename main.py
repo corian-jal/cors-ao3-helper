@@ -8,8 +8,8 @@ import datamanipulation as dm
 
 source : str = None
 archive : dm.pd.DataFrame = None
-dm_options = ["1 - [L]oad from CSV", "2 - [S]ave to CSV", "3 - [R]eset to Last Load", "4 - [F]ilter", 
-              "5 - S[o]rt", "6 - [C]ount", "7 - L[i]st Columns", "8 - [P]rint", "9 - View [H]all of Fame", 
+dm_options = ["1 - [L]oad from CSV\t2 - [S]ave to CSV\t3 - [R]eset to Last Load\t4 - [F]ilter", 
+              "5 - S[o]rt\t6 - [C]ount\t7 - L[i]st Columns\t8 - [P]rint\t9 - View [H]all of Fame", 
               "10 - Go [B]ack"]
 
 # callable methods for the main program loop
@@ -103,9 +103,10 @@ def dmLoop() -> None:
 os.system('cls') #clear terminal
 
 options = ["1 - Test HTML [P]arse", "2 - Test [D]ata Manipulation", "3 - [E]xit"]
-print("Hi! Cor's AO3 Helper is now running. For now, options are limited for testing. What would you like to do?")
+print("Meowdy!")
 
 while True:
+    print("Cor's AO3 Helper is now running. For the moment, options are limited for testing. What would you like to do?")
     # need to add error handling
     for option in options:
         print('  ', option)
@@ -113,8 +114,16 @@ while True:
     
     match prompt:
         case 'p': # get html, parse, save csv
-            mfl_pg1 = ao3int.getMFL()
-            library = htp.mflPageToFicList(mfl_pg1)
+            mfl_pgs = ao3int.getMFL()
+
+            library = []
+            num = 1
+            for mfl_pg in mfl_pgs:
+                print("on page " + str(num))
+                library = library + htp.mflPageToFicList(mfl_pg, num)
+                num += 1
+            print(str(len(library)) + " works found.")
+            
             archive = dm.createArchive(library)
 
             filename = input('What should I name this file?\n> ')
