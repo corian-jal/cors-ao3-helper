@@ -29,9 +29,16 @@ def topTags(archive : pd.DataFrame, col : str) -> pd.DataFrame:
     all_tags = archive[col].to_list()
     halloffame = {}
 
-    for tags_str in all_tags:
-        tags = literal_eval(tags_str)
-        for tag in tags:
+    try: 
+        for tags_str in all_tags:
+            tags = literal_eval(tags_str)
+            for tag in tags:
+                    if tag in halloffame:
+                        halloffame[tag] += 1
+                    else:
+                        halloffame[tag] = 1
+    except:
+        for tag in all_tags:
             if tag in halloffame:
                 halloffame[tag] += 1
             else:

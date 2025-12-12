@@ -8,8 +8,8 @@ import datamanipulation as dm
 
 source : str = None
 archive : dm.pd.DataFrame = None
-dm_options = ["1 - [L]oad from CSV\t2 - [S]ave to CSV\t3 - [R]eset to Last Load\t4 - [F]ilter", 
-              "5 - S[o]rt\t6 - [C]ount\t7 - L[i]st Columns\t8 - [P]rint\t9 - View [H]all of Fame", 
+dm_options = ["1 - [L]oad from CSV", "2 - [S]ave to CSV", "3 - [R]eset to Last Load", "4 - [F]ilter", 
+              "5 - S[o]rt", "6 - [C]ount", "7 - L[i]st Columns", "8 - [P]rint", "9 - View [H]all of Fame", 
               "10 - Go [B]ack"]
 
 # callable methods for the main program loop
