@@ -14,6 +14,9 @@ dm_options = ["1 - [L]oad from CSV", "2 - [S]ave to CSV", "3 - [R]eset to Last L
 
 # callable methods for the main program loop
 def dmLoop() -> None:
+    global source
+    global archive
+
     if archive is None:
         filename = input("No archive is currently active. Please give me the name of the csv to load.\n> ")
         source = './files/' + filename + '.csv'
@@ -110,15 +113,15 @@ while True:
     
     match prompt:
         case 'p': # get html, parse, save csv
-            sample = ao3int.getMFLSample()
-            library = htp.mflPageToFicList(sample)
+            mfl_pg1 = ao3int.getMFL()
+            library = htp.mflPageToFicList(mfl_pg1)
             archive = dm.createArchive(library)
 
-            name = input('What should I name this file?\n> ')
-            filename = './files/' + name + '.csv'
-            dm.storeArchive(archive, filename)
+            filename = input('What should I name this file?\n> ')
+            source = './files/' + filename + '.csv'
+            dm.storeArchive(archive, source)
 
-            print("Alright, I've exported '", filename, "'. What else would you like to do?")
+            print("Alright, I've exported '" + source + "'. What else would you like to do?")
 
         case 'd': # test data manipulation
             dmLoop()
