@@ -8,7 +8,7 @@ import time
 # placeholder -- using a single local html file for now; interacting with AO3 to be configured later
 # get and return all html for all pages or one at a time? probably all at once to avoid contamination
 def getMFLSample () -> str:
-    with open('files/mfl-page1sample.html', encoding='utf-8') as file:
+    with open('./files/mfl-page1sample.html', encoding='utf-8') as file:
         sample = file.read()
     return sample
 
@@ -34,7 +34,7 @@ def getMFL () -> list:
 
         login = s.post("https://archiveofourown.org/users/login", params=payload, allow_redirects=False)
         if login.status_code == 302:
-            print("Logged in successfully! Grabbing your Marked for Later works now...")
+            print("Grabbing your Marked for Later works now...")
             page_num = 1
 
             while True:
@@ -43,11 +43,15 @@ def getMFL () -> list:
                 
                 soup = BeautifulSoup(mfl_pg.text, 'html.parser')                
                 if soup.find('ol', 'reading work index group') is None:
+                    if page_num == 1:
+                        input("Either you have no works Marked for Later or log in failed. Please check and try again.\n> ")
                     break
                 
                 mfl.append(mfl_pg.text)
                 page_num += 1
-                print("Sleeping for 5s before loading page " + str(page_num) + ".")
-                #time.sleep(5)
+                print("Sleeping for 3s before loading page " + str(page_num) + ".")
+                time.sleep(3) # some suggest randomizing this between 1-3
+        else:
+            print("Sorry, I got a page error.")
 
         return mfl

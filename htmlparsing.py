@@ -4,6 +4,9 @@ from bs4 import BeautifulSoup
 import json
 from datetime import datetime
 
+syn_source = './files/synonyms.json'
+synonyms = {}
+
 # define fic class
 class Fic:
     def __init__(self, id, link, title, authors, rating, warnings, fandoms, 
@@ -36,7 +39,7 @@ class Fic:
     def ficToList(self) -> list: # add a reverse?
         return [self.work_id, self.link, self.title, self.authors, self.rating, self.warnings, self.fandoms, self.ships, self.characters, self.freeforms, self.word_count, self.chapter_count, self.series, self.kudos, self.hits, self.last_update, self.last_visit, self.visit_num]
 
-with open('./files/synonyms.json') as f:
+with open(syn_source) as f:
     synonyms = json.load(f)
 
 def normalizeTags(tags : list) -> list:
@@ -49,16 +52,13 @@ def normalizeTags(tags : list) -> list:
     return list(dict.fromkeys(new_tags)) #remove dups and maintain order?
 
 def mflPageToFicList(sample : str, page_num : int) -> list:
-    # how does the css associated with my account affect the html? works that are hidden? remember to account for deleted, mystery, etc works too
-
     # beautifulsoup parsing
     soup = BeautifulSoup(sample, 'html.parser')
 
     # on mfl page, fics are list items (li) in an ordered list (ol)
     ficsonpage = soup.find('ol', 'reading work index group').find_all('li', role='article')
-    # need to account for deleted + mystery fics, right?
 
-    library_real = [] # objects
+    #library_real = [] # objects
     library = [] # lists for pds
 
     # parse each fic on the page into a fic object
@@ -126,9 +126,10 @@ def mflPageToFicList(sample : str, page_num : int) -> list:
             # if i save each html, i can output them to a file and get something readable in browser, though the links don't work. 
             # can i link that to ao3 somehow? or format it? or make at least a link to the fic work?
 
-            logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, last_visit, visit_num)
-            library_real.append(logged_fic)
-            library.append(logged_fic.ficToList())
+            #logged_fic = Fic(id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, last_visit, visit_num)
+            #library_real.append(logged_fic)
+            log = [id, link, title, author, rating, warnings, fandoms, ships, charas, freeforms, word_count, chapter_count, series, kudos, hits, last_update, last_visit, visit_num, page_num, str(fic)]
+            library.append(log)
             #print(logged_fic)
             #print('----------------------------------------------------------------')
             #input("Press Enter to continue...")

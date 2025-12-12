@@ -7,10 +7,14 @@ from ast import literal_eval
 import AO3
 
 def createArchive(library : list) -> pd.DataFrame:
-    return pd.DataFrame(library, columns=['work_id', 'link', 'title', 'author', 'rating', 'warnings', 'fandoms', 'ships', 'characters', 'freeforms', 'word_count', 'chapter_count', 'series', 'kudos', 'hits', 'last_update', 'last_visit', 'visit_num'])
+    return pd.DataFrame(library, columns=['work_id', 'link', 'title', 'author', 'rating', 'warnings', 'fandoms', 'ships', 'characters', 'freeforms', 'word_count', 'chapter_count', 'series', 'kudos', 'hits', 'last_update', 'last_visit', 'visit_num', 'last_known_page', 'html'])
 
 def loadArchive(filename : str) -> pd.DataFrame:
-    return pd.read_csv(filename)
+    try:
+        archive = pd.read_csv(filename)
+    except: 
+        archive = None
+    return archive
 
 def printColumns(archive : pd.DataFrame) -> None:
     print(list(archive.columns))
@@ -27,22 +31,20 @@ def printArchive(archive : pd.DataFrame, cols : list, rows : int) -> None:
 
 def topTags(archive : pd.DataFrame, col : str) -> pd.DataFrame:
     all_tags = archive[col].to_list()
-    halloffame = {}
 
-    try: 
-        for tags_str in all_tags:
-            tags = literal_eval(tags_str)
-            for tag in tags:
-                    if tag in halloffame:
-                        halloffame[tag] += 1
-                    else:
-                        halloffame[tag] = 1
-    except:
-        for tag in all_tags:
-            if tag in halloffame:
-                halloffame[tag] += 1
-            else:
-                halloffame[tag] = 1
+    if col in ['warnings', 'fandoms', 'ships', 'characters', 'freeforms', 'series']: #add author when mult is supported
+        # each entry is a str representation of a list of strings
+        tags_str = all_tags
+        all_tags = []
+        for tag_list in tags_str:
+            all_tags = all_tags + (literal_eval(tag_list))
+
+    halloffame = {}
+    for tag in all_tags:
+        if tag in halloffame:
+            halloffame[tag] += 1
+        else:
+            halloffame[tag] = 1
     
     hallofframe = pd.DataFrame(list(halloffame.items()), columns=['tag', 'count'])
     return hallofframe.sort_values(by='count', ascending=False)
@@ -62,6 +64,13 @@ def filterRange(archive : pd.DataFrame, col : str, start : int, end : int) -> pd
 
 def sortBy(archive : pd.DataFrame, col : str, asc : bool) -> pd.DataFrame:
     return archive.sort_values(by=col, ascending=asc)
+
+def getAllHTML(archive : pd.DataFrame) -> str:
+    allhtml = archive['html']
+    page = ''
+    for entry in allhtml:
+        page = page + '\n' + entry
+    return page
 
 def storeArchive(archive : pd.DataFrame, filename : str) -> None:
     archive.to_csv(filename)
