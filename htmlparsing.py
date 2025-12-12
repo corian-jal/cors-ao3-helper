@@ -55,7 +55,7 @@ def mflPageToFicList(sample : str) -> list:
     # on mfl page, fics are list items (li) in an ordered list (ol)
     ficsonpage = soup.find('ol', 'reading work index group').find_all('li', role='article')
     # need to account for deleted + mystery fics, right?
-    print(len(ficsonpage), ' fics found\n-----------------')
+    print(len(ficsonpage), 'fics found.')
 
     library_real = [] # objects
     library = [] # lists for pds
@@ -106,9 +106,9 @@ def mflPageToFicList(sample : str) -> list:
         word_count = int(fic.find('dd', class_='words').text.replace(',',''))
         chapter_count = fic.find('dd', class_='chapters').text
         
-        series = 'None'
+        series = 'Not a part of a series.'
         series_maybe = fic.find('ul', class_='series')
-        if series_maybe != None:
+        if series_maybe is not None:
             series = series_maybe.text.strip()
 
         kudos = int(fic.find('dd', class_='kudos').text.replace(',',''))

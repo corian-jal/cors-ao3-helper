@@ -14,10 +14,11 @@ dm_options = ["1 - [L]oad from CSV", "2 - [S]ave to CSV", "3 - [R]eset to Last L
 
 # callable methods for the main program loop
 def dmLoop() -> None:
-    filename = input("No archive is currently active. Please give me the name of the csv to load.\n> ")
-    source = './files/' + filename + '.csv'
-    archive = dm.loadArchive(source)
-    print("Successfully loaded archive.")
+    if archive is None:
+        filename = input("No archive is currently active. Please give me the name of the csv to load.\n> ")
+        source = './files/' + filename + '.csv'
+        archive = dm.loadArchive(source)
+        print("Successfully loaded archive.")
     print("You are now in the data manipulation loop. What would you like to do?")
 
     while True:
