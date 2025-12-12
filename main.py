@@ -9,7 +9,8 @@ import datamanipulation as dm
 source : str = None
 archive : dm.pd.DataFrame = None
 dm_options = ["1 - [L]oad from CSV", "2 - [S]ave to CSV", "3 - [R]eset to Last Load", "4 - [F]ilter", 
-              "5 - S[o]rt", "6 - [C]ount", "7 - L[i]st Columns", "8 - [P]rint", "9 - Go [B]ack"]
+              "5 - S[o]rt", "6 - [C]ount", "7 - L[i]st Columns", "8 - [P]rint", "9 - View [H]all of Fame", 
+              "10 - Go [B]ack"]
 
 # callable methods for the main program loop
 def dmLoop() -> None:
@@ -43,6 +44,7 @@ def dmLoop() -> None:
             case 'f': #filter
                 col_name = input("What column would you like to filter on?\n> ")
                 mode = input("Would you like to filter for an [i]tem or [r]ange?\n> ")
+                # should i check for valid? or another ymmv if you do something weird
                 match mode:
                     case 'i':
                         val = input("What item would you like to search?\n> ")
@@ -54,7 +56,7 @@ def dmLoop() -> None:
                         archive = dm.filterRange(archive, col_name, start, end)
                     case _:
                         print("[Wrong buzzer noise.] Try again.")
-                print("Okay, found ", dm.countRows(archive), " results.")
+                print("Okay, found", dm.countRows(archive), "results.")
                 dm.printArchive(archive, ['work_id', 'title', 'author', col_name], dm.countRows(archive))
 
             case 'o': #sort
@@ -72,11 +74,19 @@ def dmLoop() -> None:
 
             case 'p': #print archive
                 height = int(input("How many rows would you like?\n> "))
-                extend = input("Would you like columns other than id, title, and author? y/n\n> ")
                 cols = []
-                if extend == 'y':
+                if (input("Would you like columns other than id, title, and author? y/n\n> ").lower().startswith('y')):
                     cols = (input("List each column name separated by a space, with no leading or trailing spaces.\n> ")).split(' ')
                 dm.printArchive(archive,['work_id', 'title', 'author'] + cols, height)
+
+            case 'h': #view hall of fame
+                # should i be worried about overwriting and/or errors?
+                cat = input("What tag category would you like the results for?\n> ")
+                hallofframe = dm.topTags(archive, cat)
+                num = int(input("How many rows would you like?\n> "))
+                dm.printArchive(hallofframe, ['tag', 'count'], num)
+                if (input("Would you like to save to save these results to a file? y/n\n> ").lower().startswith('y')):
+                    dm.storeArchive(hallofframe, './files/hallofframe-' + cat + '.csv')
 
             case 'b': #back
                 print("Alright, sending you back.")

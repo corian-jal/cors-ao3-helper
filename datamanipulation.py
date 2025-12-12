@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from ast import literal_eval
 import AO3
 
 def createArchive(library : list) -> pd.DataFrame:
@@ -14,9 +15,6 @@ def loadArchive(filename : str) -> pd.DataFrame:
 def printColumns(archive : pd.DataFrame) -> None:
     print(list(archive.columns))
 
-# if i save each html, i can output them to a file and get something readable in browser, though the links don't work. 
-# can i like that to ao3 somehow? or format it? or make at least a link to the fic work?
-
 def countRows(archive :pd.DataFrame) -> int:
     return archive.shape[0]
 
@@ -26,6 +24,21 @@ def printArchive(archive : pd.DataFrame, cols : list, rows : int) -> None:
     elif rows < 0:
         rows = 0
     print(archive.loc[:, cols].head(rows))
+
+def topTags(archive : pd.DataFrame, col : str) -> pd.DataFrame:
+    all_tags = archive[col].to_list()
+    halloffame = {}
+
+    for tags_str in all_tags:
+        tags = literal_eval(tags_str)
+        for tag in tags:
+            if tag in halloffame:
+                halloffame[tag] += 1
+            else:
+                halloffame[tag] = 1
+    
+    hallofframe = pd.DataFrame(list(halloffame.items()), columns=['tag', 'count'])
+    return hallofframe.sort_values(by='count', ascending=False)
 
 def filterItem(archive : pd.DataFrame, col : str, val, include : bool) -> pd.DataFrame:
     # works for full and partial
@@ -38,7 +51,7 @@ def filterRange(archive : pd.DataFrame, col : str, start : int, end : int) -> pd
     # inclusive
     return archive[(archive[col] >= start) & (archive[col] <= end)]
 
-# or filtering is a wishlist item
+# or-filtering is a wishlist item
 
 def sortBy(archive : pd.DataFrame, col : str, asc : bool) -> pd.DataFrame:
     return archive.sort_values(by=col, ascending=asc)

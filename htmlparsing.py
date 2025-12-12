@@ -43,7 +43,7 @@ def normalizeTags(tags : list) -> list:
     new_tags = []
     for tag in tags:
         tag = tag.replace('(Anime)', '(Anime & Manga)').replace('(Manga)', '(Anime & Manga)')
-        if tag in synonyms.keys():
+        if tag in synonyms:
             tag = synonyms.get(tag)
         new_tags.append(tag)
     return list(dict.fromkeys(new_tags)) #remove dups and maintain order?
