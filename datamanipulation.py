@@ -10,6 +10,7 @@ def createArchive(library : list) -> pd.DataFrame:
     return pd.DataFrame(library, columns=['work_id', 'link', 'title', 'author', 'rating', 'warnings', 'fandoms', 'ships', 'characters', 'freeforms', 'word_count', 'chapter_count', 'series', 'kudos', 'hits', 'last_update', 'last_visit', 'visit_num', 'last_known_page', 'html'])
 
 def loadArchive(filename : str) -> pd.DataFrame:
+    # turn str(list[str]) back into list[str] in here?
     try:
         archive = pd.read_csv(filename)
     except: 
@@ -33,7 +34,7 @@ def topTags(archive : pd.DataFrame, col : str) -> pd.DataFrame:
     all_tags = archive[col].to_list()
 
     if col in ['warnings', 'fandoms', 'ships', 'characters', 'freeforms', 'series']: #add author when mult is supported
-        # each entry is a str representation of a list of strings
+        # each entry is a str representation of a list of strings >> only if loaded, not when just built
         tags_str = all_tags
         all_tags = []
         for tag_list in tags_str:

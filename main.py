@@ -6,7 +6,7 @@ import ao3interactions as ao3int
 import htmlparsing as htp
 import datamanipulation as dm
 
-filepath = './files/'
+filepath = './showcase/'
 
 source : str = None
 archive : dm.pd.DataFrame = None
@@ -18,7 +18,16 @@ dm_options = ["", "1 - [L]oad from CSV", "2 - [S]ave to CSV", "3 - [R]eset to La
 def dmLoop() -> None:
     global source
     global archive
-     
+    
+    if source is not None:
+        # str(list[str]) on load, list(str) when built
+        # if i want to do something like sort on number of fandoms, might want to turn back into list(str) on load
+        # for now, just reloading so field is always str(list[str])
+        #   >> which is useful for filtering in/out, but might want list[str] if i want to pull the specific tag that includes it?
+        # date obj or date str? the date str is such that it doesn't matter i think
+        # need to decide whether i want everything as a str canonically or whatever it should be. nums seem to be working as is (re:count)?
+        archive = dm.loadArchive(source)
+
     print("You are now in the data manipulation loop. What would you like to do?")
 
     while True:
@@ -115,6 +124,7 @@ def dmLoop() -> None:
 
             case 'h': #view hall of fame
                 # should i be worried about overwriting and/or errors?
+                # for some reason, doesn't work directly after parse? but works after exit + load >> list v str(list)
                 cat = input("What tag category would you like the results for?\n> ")
                 try: 
                     hallofframe = dm.topTags(archive, cat)
@@ -124,7 +134,7 @@ def dmLoop() -> None:
                 num = int(input("How many rows would you like?\n> "))
                 dm.printArchive(hallofframe, ['tag', 'count'], num)
                 if (input("Would you like to save to save these results to a file? y/n\n> ").lower().startswith('y')):
-                    dm.storeArchive(hallofframe, './files/hallofframe-' + cat + '.csv')
+                    dm.storeArchive(hallofframe, filepath + 'hallofframe-' + cat + '.csv')
 
             case 'e': #export html
                 filename = input("What would you like to name the file?\n> ")
