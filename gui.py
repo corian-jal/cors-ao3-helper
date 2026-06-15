@@ -63,6 +63,7 @@ class MainWindow(QMainWindow):
 
         login = QPushButton("Log In to AO3")
         login.clicked.connect(self.attempt_login)
+        l2.addWidget(login)
 
         tab2 = QWidget()
         tab2.setLayout(l2)
