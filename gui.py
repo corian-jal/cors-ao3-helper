@@ -9,6 +9,8 @@ from PyQt6.QtWidgets import (
 )
 
 # super variables
+username = "none"
+password = "none"
 col_current = "none"
 search_item = "none"
 r_low = -1
@@ -23,26 +25,60 @@ class MainWindow(QMainWindow):
         # self.setFixedSize(QSize(800, 600))
         self.setMinimumSize(QSize(800, 600))
 
-        # my header
+        tabs = QTabWidget()
+        tabs.setTabPosition(QTabWidget.TabPosition.North)
+
+        # header tab
+        l1 = QVBoxLayout()
+        
         intro = QLabel("Meowdy! Welcome to Cor's AO3 Helper.")
         intro.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        l1.addWidget(intro)
+        
+        # adding instructions might be useful
+
         sayHello = QLabel()
         sayHello.setPixmap(QPixmap("cheer.png"))
         sayHello.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        l1.addWidget(sayHello)
+
+        tab1 = QWidget()
+        tab1.setLayout(l1)
+        tabs.addTab(tab1, "Intro")
+
+        # - login/load tab
+        l2 = QVBoxLayout()
+
+        user = QLineEdit()
+        user.setMaxLength(30)
+        user.setPlaceholderText("username")
+        user.textEdited.connect(self.user_edited)
+        l2.addWidget(user)
+
+        passw = QLineEdit()
+        passw.setMaxLength(30)
+        passw.setPlaceholderText("password")
+        passw.textEdited.connect(self.passw_edited)
+        l2.addWidget(passw)
+
+        login = QPushButton("Log In to AO3")
+        login.clicked.connect(self.attempt_login)
+
+        tab2 = QWidget()
+        tab2.setLayout(l2)
+        tabs.addTab(tab2, "Load")
+
+        # - filter item tab
+
+        # - filter range tab
+
+        # - sort tab
+
+        # - extra tab
+
+        # - main window displaying stats (x of y) and list?
 
         # playing around with fields i might need
-
-        # tabbed view
-        tabs = QTabWidget()
-        tabs.setTabPosition(QTabWidget.TabPosition.North)
-        
-        test = QLineEdit()
-        test.setPlaceholderText("hi")
-        tabs.addTab(test, "Tab 1")
-        
-        test2 = QLineEdit()
-        test2.setPlaceholderText("hi2")
-        tabs.addTab(test2, "Tab 2")
 
         # single line text input
         # getting search item
@@ -71,12 +107,12 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         widgets = [
             tabs,
-            intro,
-            sayHello,
-            search,
-            low,
-            high,
-            columns,
+            #intro,
+            #sayHello,
+            #search,
+            #low,
+            #high,
+            #columns,
             #QCheckBox,
             #QComboBox,
             #QDateEdit,
@@ -93,6 +129,16 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
+
+    def user_edited(self, s):
+        username = s
+
+    def passw_edited(self, s):
+        password = s
+
+    def attempt_login(self):
+        # attempt login
+        print("To be implemented.")
 
     def text_edited(self, s):
         search_item = s
