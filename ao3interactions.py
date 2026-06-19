@@ -55,3 +55,49 @@ def getMFL () -> list:
             print("Sorry, I got a page error.")
 
         return mfl
+
+# variant of getMFL for use in the gui version; should work the same except only reports at the end, not throughout
+# so output is a "list" but actually a tuple of the process summary and actual mfl item (num, list)
+# htmlparse prints to line so i'm going to leave cli as something running in the background you can check
+# just no input functs so it's not mandatory
+def getMFL_gui (user : str, passw : str) -> list:
+    with requests.Session() as s:
+        soup = BeautifulSoup(s.get('https://archiveofourown.org/users/login').text, 'html.parser')
+        token = soup.find("input", {"name": 'authenticity_token'})["value"]
+        payload = {
+            'user[login]': user,
+            'user[password]': passw,
+            'authenticity_token': token
+        }
+        print("Welcome to the CLI zone, " + user + "! Logging you in now...")
+
+        exit_status = None
+        mfl = []
+
+        login = s.post("https://archiveofourown.org/users/login", params=payload, allow_redirects=False)
+        if login.status_code == 302:
+            print("Attempting to grab your Marked for Later works now...")
+            page_num = 1
+
+            while True:
+                link = 'https://archiveofourown.org/users/' + user + '/readings?show=to-read&page=' + str(page_num)
+                mfl_pg = s.get(link)
+                
+                soup = BeautifulSoup(mfl_pg.text, 'html.parser')                
+                if soup.find('ol', 'reading work index group') is None:
+                    if page_num == 1:
+                        print("Either you have no works Marked for Later or log in failed. Please check and try again.")
+                        exit_status = 1 # see above
+                    else:
+                        exit_status = 2 # found works and exited successfully
+                    break
+                
+                mfl.append(mfl_pg.text)
+                page_num += 1
+                print("Sleeping for 3s before loading page " + str(page_num) + ".")
+                time.sleep(3) # some suggest randomizing this between 1-3
+        else:
+            print("Sorry, I got a page error.")
+            exit_status = 0 # see above
+
+        return (exit_status, mfl)

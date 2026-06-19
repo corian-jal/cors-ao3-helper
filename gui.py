@@ -1,73 +1,82 @@
-# import sys # to access command line args
+# import libraries
+import os
+
+# import modules
+import ao3interactions as ao3int
+import htmlparsing as htp
+import datamanipulation as dm
+
+# pyqt gui imports
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtGui import QAction, QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDateEdit, QDateTimeEdit,
     QDial, QDoubleSpinBox, QFontComboBox, QLabel, QLCDNumber, QLineEdit,
     QMainWindow, QProgressBar, QPushButton, QRadioButton, QSlider,
-    QSpinBox, QTimeEdit, QVBoxLayout, QWidget, QTabWidget,
-)
-
-# super variables
-username = "none"
-password = "none"
-col_current = "none"
-search_item = "none"
-r_low = -1
-r_high = -1
+    QSpinBox, QTimeEdit, QVBoxLayout, QWidget, QTabWidget, QDialog, 
+    QDialogButtonBox)
 
 # setting the main window
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # super variables
+        self.username : str = None
+        self.password : str = None
+        self.filepath = './gui_test/'
+        self.source : str = None
+        self.archive : dm.pd.DataFrame = None
+
+        self.col_current = None
+        self.search_item = None
+        self.r_low = -1
+        self.r_high = -1
+
+        # start defining window
         self.setWindowTitle("Cor's GUI Experiment")
         # self.setFixedSize(QSize(800, 600))
         self.setMinimumSize(QSize(800, 600))
 
-        tabs = QTabWidget()
-        tabs.setTabPosition(QTabWidget.TabPosition.North)
+        self.tabs = QTabWidget()
+        self.tabs.setTabPosition(QTabWidget.TabPosition.North)
 
         # header tab
         l1 = QVBoxLayout()
         
-        intro = QLabel("Meowdy! Welcome to Cor's AO3 Helper.")
-        intro.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
-        l1.addWidget(intro)
+        self.intro = QLabel("Meowdy! Welcome to Cor's AO3 Helper.")
+        self.intro.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        l1.addWidget(self.intro)
         
         # adding instructions might be useful
 
-        sayHello = QLabel()
-        sayHello.setPixmap(QPixmap("cheer.png"))
-        sayHello.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
-        l1.addWidget(sayHello)
+        self.sayHello = QLabel()
+        self.sayHello.setPixmap(QPixmap("cheer.png"))
+        self.sayHello.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        l1.addWidget(self.sayHello)
 
-        tab1 = QWidget()
-        tab1.setLayout(l1)
-        tabs.addTab(tab1, "Intro")
+        self.tab1 = QWidget()
+        self.tab1.setLayout(l1)
+        self.tabs.addTab(self.tab1, "Intro")
 
         # - login/load tab
         l2 = QVBoxLayout()
 
-        user = QLineEdit()
-        user.setMaxLength(30)
-        user.setPlaceholderText("username")
-        user.textEdited.connect(self.user_edited)
-        l2.addWidget(user)
+        self.user = QLineEdit()
+        self.user.setPlaceholderText("What's your AO3 Username?")
+        l2.addWidget(self.user)
 
-        passw = QLineEdit()
-        passw.setMaxLength(30)
-        passw.setPlaceholderText("password")
-        passw.textEdited.connect(self.passw_edited)
-        l2.addWidget(passw)
+        self.passw = QLineEdit()
+        self.passw.setPlaceholderText("What's your AO3 Password? Promise I'm not stealing :x")
+        l2.addWidget(self.passw)
 
-        login = QPushButton("Log In to AO3")
-        login.clicked.connect(self.attempt_login)
-        l2.addWidget(login)
+        self.login = QPushButton("Get Your AO3 Marked for Later List!")
+        self.login.clicked.connect(self.attempt_login)
+        l2.addWidget(self.login)
 
-        tab2 = QWidget()
-        tab2.setLayout(l2)
-        tabs.addTab(tab2, "Load")
+        self.tab2 = QWidget()
+        self.tab2.setLayout(l2)
+        self.tabs.addTab(self.tab2, "Load")
 
         # - filter item tab
 
@@ -83,63 +92,68 @@ class MainWindow(QMainWindow):
 
         # single line text input
         # getting search item
-        search = QLineEdit()
-        search.setMaxLength(30)
-        search.setPlaceholderText("What do you want to search?")
-        search.textEdited.connect(self.text_edited)
+        #self.search = QLineEdit()
+        #self.search.setMaxLength(30)
+        #self.search.setPlaceholderText("What do you want to search?")
+        #self.search.textEdited.connect(self.text_edited)
 
         # numeric input
-        low = QSpinBox()
-        low.setMinimum(0)
-        low.valueChanged.connect(self.lowvalue_changed) 
+        #self.low = QSpinBox()
+        #self.low.setMinimum(0)
+        #self.low.valueChanged.connect(self.lowvalue_changed) 
 
-        high = QSpinBox()
-        high.setMinimum(0)
-        high.valueChanged.connect(self.highvalue_changed) 
+        #self.high = QSpinBox()
+        #self.high.setMinimum(0)
+        #self.high.valueChanged.connect(self.highvalue_changed) 
 
         # combo box for selecting column with formal name input
-        columns = QComboBox()
-        columns.addItems(["work_id", "link", "title", "author", "rating", "warnings", 
-                          "fandoms", "ships", "characters", "freeforms", "word_count", 
-                          "chapter_count", "series", "kudos", "hits", "last_update", 
-                          "last_visit", "visit_num", "last_known_page", "html"])
-        columns.currentTextChanged.connect(self.text_changed)
+        #self.columns = QComboBox()
+        #self.columns.addItems(["work_id", "link", "title", "author", "rating", "warnings", 
+        #                  "fandoms", "ships", "characters", "freeforms", "word_count", 
+        #                  "chapter_count", "series", "kudos", "hits", "last_update", 
+        #                  "last_visit", "visit_num", "last_known_page", "html"])
+        #self.columns.currentTextChanged.connect(self.text_changed)
 
         layout = QVBoxLayout()
-        widgets = [
-            tabs,
-            #intro,
-            #sayHello,
-            #search,
-            #low,
-            #high,
-            #columns,
-            #QCheckBox,
-            #QComboBox,
-            #QDateEdit,
-            #QLabel, # static text label
-            #QLineEdit,
-            #QProgressBar,
-            #QPushButton,
-            #QRadioButton,
-        ]
-
-        for w in widgets:
-            layout.addWidget(w)
+        layout.addWidget(self.tabs)
 
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
-    def user_edited(self, s):
-        username = s
-
-    def passw_edited(self, s):
-        password = s
-
     def attempt_login(self):
-        # attempt login
-        print("To be implemented.")
+        #dlg = QDialog(self)
+        #dlg.setWindowTitle("Loading Archive")
+        #dlg_layout = QVBoxLayout()
+
+        self.username = self.user.text()
+        self.password = self.passw.text()
+
+        #mfl_pgs_gui = ao3int.getMFL_gui(username, password)
+        #mfl_pgs = mfl_pgs_gui[1]
+        
+        # for testing dialog box
+        print(self.username)
+        print(self.password)
+        mfl_pgs_gui = [3]
+        
+        match mfl_pgs_gui[0]:
+            case 0:
+                msg = "Sorry, a page error occurred."
+            case 1:
+                msg = "Either you have no works Marked for Later or log in failed. Please check and try again."
+            case 2:
+                msg = "Found your works okay! There are " #+ mfl_pgs.size() + "."
+            case _:
+                msg = "How did you get here...Something went terribly wrong..."
+                
+        status = QLabel(msg)
+        status.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        #dlg_layout.addWidget(status)
+
+        #dlg_layout.addWidget(QDialogButtonBox.StandardButton.Ok)
+        
+        #dlg.exec()
 
     def text_edited(self, s):
         search_item = s
