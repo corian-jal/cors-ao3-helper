@@ -7,6 +7,7 @@ import htmlparsing as htp
 import datamanipulation as dm
 
 # pyqt gui imports
+# used this tutorial as the basis of my pyqt development: https://www.pythonguis.com/pyqt6-tutorial/
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtGui import QAction, QPixmap
 from PyQt6.QtWidgets import (
@@ -16,12 +17,35 @@ from PyQt6.QtWidgets import (
     QSpinBox, QTimeEdit, QVBoxLayout, QWidget, QTabWidget, QDialog, 
     QDialogButtonBox)
 
+class CustomDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        (title, msg) = parent.get_dlg()
+
+        self.setWindowTitle(title)
+        self.setMinimumSize(QSize(400, 200))
+
+        layout = QVBoxLayout()
+        
+        layout.addWidget(QLabel(msg))
+
+        QBtn = QDialogButtonBox.StandardButton.Ok
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+        layout.addWidget(self.buttonBox)
+        
+        self.setLayout(layout)
+
 # setting the main window
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
         # super variables
+        self.dlg_type : str = "General"
+        self.dlg_status : str = "Dialog Triggered in General"
+
         self.username : str = None
         self.password : str = None
         self.filepath = './gui_test/'
@@ -34,7 +58,7 @@ class MainWindow(QMainWindow):
         self.r_high = -1
 
         # start defining window
-        self.setWindowTitle("Cor's GUI Experiment")
+        self.setWindowTitle("Cor's AO3 Helper")
         # self.setFixedSize(QSize(800, 600))
         self.setMinimumSize(QSize(800, 600))
 
@@ -121,52 +145,40 @@ class MainWindow(QMainWindow):
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
+    def get_dlg(self):
+        return (self.dlg_type, self.dlg_status)
+    
+    def reset_dlg(self):
+        self.dlg_type = "General"
+        self.dlg_status = "Dialog Triggered in General"
+
     def attempt_login(self):
-        #dlg = QDialog(self)
-        #dlg.setWindowTitle("Loading Archive")
-        #dlg_layout = QVBoxLayout()
+        self.dlg_type = "Loading Marked for Later"
 
         self.username = self.user.text()
+        self.user.clear()
         self.password = self.passw.text()
+        self.passw.clear()
 
         #mfl_pgs_gui = ao3int.getMFL_gui(username, password)
         #mfl_pgs = mfl_pgs_gui[1]
         
         # for testing dialog box
-        print(self.username)
-        print(self.password)
-        mfl_pgs_gui = [3]
+        mfl_pgs_gui = [0]
         
         match mfl_pgs_gui[0]:
             case 0:
-                msg = "Sorry, a page error occurred."
+                self.dlg_status = "Sorry, a page error occurred."
             case 1:
-                msg = "Either you have no works Marked for Later or log in failed. Please check and try again."
+                self.dlg_status = "Either you have no works Marked for Later or log in failed. Please check and try again."
             case 2:
-                msg = "Found your works okay! There are " #+ mfl_pgs.size() + "."
+                self.dlg_status = "Found your works okay! There are " #+ mfl_pgs.size() + "."
             case _:
-                msg = "How did you get here...Something went terribly wrong..."
-                
-        status = QLabel(msg)
-        status.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
-        #dlg_layout.addWidget(status)
-
-        #dlg_layout.addWidget(QDialogButtonBox.StandardButton.Ok)
+                self.dlg_status = "How did you get here...Something went terribly wrong..."
         
-        #dlg.exec()
-
-    def text_edited(self, s):
-        search_item = s
-
-    def lowvalue_changed(self, i):
-        r_low = i
-
-    def highvalue_changed(self, i):
-        r_high = i
-    
-    def text_changed(self, s): # s is a str
-        col_current = s
-        # print(s)
+        dlg = CustomDialog(self)
+        dlg.exec()
+        self.reset_dlg()
 
 
 # one QApplication instance per application
