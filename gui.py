@@ -92,7 +92,12 @@ class MainWindow(QMainWindow):
 
         self.passw = QLineEdit()
         self.passw.setPlaceholderText("What's your AO3 Password? Promise I'm not stealing :x")
+        # hide somehow?
         l2.addWidget(self.passw)
+
+        self.file = QLineEdit()
+        self.file.setPlaceholderText("What would you like to name this saved file?")
+        l2.addWidget(self.file)
 
         self.login = QPushButton("Get Your AO3 Marked for Later List!")
         self.login.clicked.connect(self.attempt_login)
@@ -154,17 +159,18 @@ class MainWindow(QMainWindow):
 
     def attempt_login(self):
         self.dlg_type = "Loading Marked for Later"
+        self.dlg_status = "App will be unresponsive while pulling. Do not close.\nSee CLI for status info."
+        dlg = CustomDialog(self)
+        dlg.exec()
 
+        os.system('cls')
         self.username = self.user.text()
-        self.user.clear()
         self.password = self.passw.text()
+        self.user.clear()
         self.passw.clear()
+        mfl_pgs_gui = ao3int.getMFL_gui(self.username, self.password)
 
-        #mfl_pgs_gui = ao3int.getMFL_gui(username, password)
-        #mfl_pgs = mfl_pgs_gui[1]
-        
-        # for testing dialog box
-        mfl_pgs_gui = [0]
+        mfl_pgs = mfl_pgs_gui[1]
         
         match mfl_pgs_gui[0]:
             case 0:
@@ -172,12 +178,32 @@ class MainWindow(QMainWindow):
             case 1:
                 self.dlg_status = "Either you have no works Marked for Later or log in failed. Please check and try again."
             case 2:
-                self.dlg_status = "Found your works okay! There are " #+ mfl_pgs.size() + "."
+                self.dlg_status = "Found your works okay! There are " + str(len(mfl_pgs)) + " pages."
             case _:
                 self.dlg_status = "How did you get here...Something went terribly wrong..."
         
         dlg = CustomDialog(self)
         dlg.exec()
+
+        library = []
+        num = 1
+        for mfl_pg in mfl_pgs:
+            print("Parsing page " + str(num) + "...")
+            library = library + htp.mflPageToFicList(mfl_pg, num)
+            num += 1
+        self.dlg_status = str(len(library)) + " works found."
+        dlg = CustomDialog(self)
+        dlg.exec()
+            
+        self.archive = dm.createArchive(library)
+
+        self.source = self.filepath + self.file.text() + '.csv'
+        dm.storeArchive(self.archive, self.source)
+
+        self.dlg_status = "Exported to '" + self.source + "'."
+        dlg = CustomDialog(self)
+        dlg.exec()
+
         self.reset_dlg()
 
 
