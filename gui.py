@@ -94,9 +94,6 @@ class MainWindow(QMainWindow):
         self.table = None
 
         self.col_current = None
-        self.search_item = None
-        self.r_low = -1
-        self.r_high = -1
 
         # start defining window
         self.setWindowTitle("Cor's AO3 Helper")
@@ -127,7 +124,8 @@ class MainWindow(QMainWindow):
         # -- login/load tab
         l2 = QVBoxLayout()
 
-        self.load_blurb = QLabel("To load from AO3, all three fields are necessary. To load from file, only last is required.")
+        self.load_blurb = QLabel("To load from AO3, all three fields are necessary. To load from file, only last is required.\n" +
+                                "To reset after filtering/sorting, press [load from file] with the file name still entered.")
         self.load_blurb.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         l2.addWidget(self.load_blurb)
 
@@ -164,7 +162,27 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.tab3, "Export")
         
         # -- filter item tab
+        # all cols: ["work_id", "link", "title", "author", "rating", "warnings", 
+        #            "fandoms", "ships", "characters", "freeforms", "word_count", 
+        #            "chapter_count", "series", "kudos", "hits", "last_update", 
+        #            "last_visit", "visit_num", "last_known_page", "html"]
         l4 = QVBoxLayout()
+
+        self.fi_cols = QComboBox()
+        self.fi_cols.addItems(["work_id", "title", "author", "rating", "warnings", 
+                            "fandoms", "ships", "characters", "freeforms", "series"])
+        l4.addWidget(self.fi_cols)
+
+        self.filter_item = QLineEdit()
+        self.filter_item.setPlaceholderText("What item would you like to search?")
+        l4.addWidget(self.filter_item)
+
+        self.exclude = QCheckBox("Exclude")
+        l4.addWidget(self.exclude)
+
+        self.ifilter = QPushButton("Filter on Item")
+        self.ifilter.clicked.connect(self.item_filter)
+        l4.addWidget(self.ifilter)
 
         self.tab4 = QWidget()
         self.tab4.setLayout(l4)
@@ -180,6 +198,19 @@ class MainWindow(QMainWindow):
         # -- sort tab
         l6 = QVBoxLayout()
 
+        self.sort_cols = QComboBox()
+        self.sort_cols.addItems(["work_id", "title", "author", "rating", "fandoms", 
+                               "word_count", "chapter_count", "kudos", "hits", 
+                               "last_update", "last_visit", "visit_num", "last_known_page"])
+        l6.addWidget(self.sort_cols)
+
+        self.ascend = QCheckBox("Ascending")
+        l6.addWidget(self.ascend)
+
+        self.to_sort = QPushButton("Sort")
+        self.to_sort.clicked.connect(self.sort)
+        l6.addWidget(self.to_sort)
+
         self.tab6 = QWidget()
         self.tab6.setLayout(l6)
         self.tabs.addTab(self.tab6, "Sort")
@@ -193,13 +224,6 @@ class MainWindow(QMainWindow):
 
         # playing around with fields i might need
 
-        # single line text input
-        # getting search item
-        #self.search = QLineEdit()
-        #self.search.setMaxLength(30)
-        #self.search.setPlaceholderText("What do you want to search?")
-        #self.search.textEdited.connect(self.text_edited)
-
         # numeric input
         #self.low = QSpinBox()
         #self.low.setMinimum(0)
@@ -209,19 +233,11 @@ class MainWindow(QMainWindow):
         #self.high.setMinimum(0)
         #self.high.valueChanged.connect(self.highvalue_changed) 
 
-        # combo box for selecting column with formal name input
-        #self.columns = QComboBox()
-        #self.columns.addItems(["work_id", "link", "title", "author", "rating", "warnings", 
-        #                  "fandoms", "ships", "characters", "freeforms", "word_count", 
-        #                  "chapter_count", "series", "kudos", "hits", "last_update", 
-        #                  "last_visit", "visit_num", "last_known_page", "html"])
-        #self.columns.currentTextChanged.connect(self.text_changed)
-
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.tabs)
 
         # display list in main window below tabs
-        self.display = QLabel("Works should display below here!")
+        self.display = QLabel("Works will display here!")
         self.layout.addWidget(self.display)
 
         widget = QWidget()
@@ -290,30 +306,44 @@ class MainWindow(QMainWindow):
     def attempt_fileload(self):
         self.source = self.filepath + self.file.text() + '.csv'
         self.archive = dm.loadArchive(self.source)
+        self.columns = ['work_id', 'title', 'author', "fandoms", "ships"]
+        self.table_display()
+
+    def item_filter(self):
+        self.col_current = self.fi_cols.currentText()
+        self.archive = dm.filterItem(self.archive, self.col_current, self.filter_item.text(), not self.exclude.isChecked())
+        self.table_display()
+
+    def sort(self):
+        self.col_current = self.sort_cols.currentText()
+        self.archive = dm.sortBy(self.archive, self.col_current, self.ascend.isChecked())
         self.table_display()
         
     def table_display(self):
+        if self.col_current is not None and self.col_current not in self.columns:
+            self.columns.append(self.col_current)
+
         if self.archive is None:
             self.dlg_type = "Display Table Error"
             self.dlg_status = "No Archive to Display"
             dlg = CustomDialog(self)
             dlg.exec()
             self.reset_dlg()
+            return
         
-        elif self.table is None:
-            self.display.setText("Showing " + str(dm.countRows(self.archive)) + " works.")
+        self.display.setText("Showing " + str(dm.countRows(self.archive)) + " works.")
+        
+        if self.table is None:
             self.table = QTableView()
             self.model = TableModel(self.archive.loc[:, self.columns])
             self.table.setModel(self.model)
             self.layout.addWidget(self.table)
-            self.update_hof()
-
         else:
-            self.display.setText("Showing " + str(dm.countRows(self.archive)) + " works.")
             self.model.layoutAboutToBeChanged.emit()
             self.model.set_dataframe(self.archive.loc[:, self.columns])
             self.model.layoutChanged.emit()
-            self.update_hof()
+            
+        self.update_hof()
 
     def update_hof(self):
         if self.fandom_frame is None:
