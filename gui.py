@@ -8,14 +8,14 @@ import datamanipulation as dm
 
 # pyqt gui imports
 # used this tutorial as the basis of my pyqt development: https://www.pythonguis.com/pyqt6-tutorial/
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, QAbstractTableModel
 from PyQt6.QtGui import QAction, QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDateEdit, QDateTimeEdit,
     QDial, QDoubleSpinBox, QFontComboBox, QLabel, QLCDNumber, QLineEdit,
     QMainWindow, QProgressBar, QPushButton, QRadioButton, QSlider,
-    QSpinBox, QTimeEdit, QVBoxLayout, QWidget, QTabWidget, QDialog, 
-    QDialogButtonBox)
+    QSpinBox, QTimeEdit, QVBoxLayout, QHBoxLayout, QWidget, QTabWidget, 
+    QDialog, QDialogButtonBox, QTableView)
 
 class CustomDialog(QDialog):
     def __init__(self, parent):
@@ -37,6 +37,39 @@ class CustomDialog(QDialog):
         
         self.setLayout(layout)
 
+# derived from this guide (pyqt5): https://www.pythonguis.com/tutorials/qtableview-modelviews-numpy-pandas/
+class TableModel(QAbstractTableModel):
+    def __init__(self, data):
+        super().__init__()
+        self._data = data
+
+    def data(self, index, role):
+        if role == Qt.ItemDataRole.DisplayRole:
+            value = self._data.iloc[index.row(), index.column()]
+            return str(value)
+
+    def rowCount(self, index):
+        return self._data.shape[0]
+
+    def columnCount(self, index):
+        return self._data.shape[1]
+
+    def headerData(self, section, orientation, role):
+        # section is the index of the column/row.
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return str(self._data.columns[section])
+
+            if orientation == Qt.Orientation.Vertical:
+                return str(self._data.index[section])
+
+    # seems like a hard reset but i'll take the potential inefficiency
+    # esp since # of row/cols can change      
+    def set_dataframe(self, data):
+        self.beginResetModel()
+        self._data = data
+        self.endResetModel()
+
 # setting the main window
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -50,7 +83,10 @@ class MainWindow(QMainWindow):
         self.password : str = None
         self.filepath = './gui_test/'
         self.source : str = None
+        
         self.archive : dm.pd.DataFrame = None
+        self.table = None
+        self.columns : list = ['work_id', 'title', 'author']
 
         self.col_current = None
         self.search_item = None
@@ -92,16 +128,20 @@ class MainWindow(QMainWindow):
 
         self.passw = QLineEdit()
         self.passw.setPlaceholderText("What's your AO3 Password? Promise I'm not stealing :x")
-        # hide somehow?
+        # hide text somehow?
         l2.addWidget(self.passw)
 
         self.file = QLineEdit()
-        self.file.setPlaceholderText("What would you like to name this saved file?")
+        self.file.setPlaceholderText("What would you like to name this saved file? / File to load?")
         l2.addWidget(self.file)
 
         self.login = QPushButton("Get Your AO3 Marked for Later List!")
         self.login.clicked.connect(self.attempt_login)
         l2.addWidget(self.login)
+
+        self.fileload = QPushButton("Load From Saved File Instead")
+        self.fileload.clicked.connect(self.attempt_fileload)
+        l2.addWidget(self.fileload) # add feedback to know if worked
 
         self.tab2 = QWidget()
         self.tab2.setLayout(l2)
@@ -143,11 +183,15 @@ class MainWindow(QMainWindow):
         #                  "last_visit", "visit_num", "last_known_page", "html"])
         #self.columns.currentTextChanged.connect(self.text_changed)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.tabs)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.tabs)
+
+        # display list in main window below tabs
+        self.display = QLabel("Works should display below here!")
+        self.layout.addWidget(self.display)
 
         widget = QWidget()
-        widget.setLayout(layout)
+        widget.setLayout(self.layout)
         self.setCentralWidget(widget)
 
     def get_dlg(self):
@@ -199,12 +243,39 @@ class MainWindow(QMainWindow):
 
         self.source = self.filepath + self.file.text() + '.csv'
         dm.storeArchive(self.archive, self.source)
+        self.archive = dm.loadArchive(self.source)
 
         self.dlg_status = "Exported to '" + self.source + "'."
         dlg = CustomDialog(self)
         dlg.exec()
 
         self.reset_dlg()
+
+        self.table_display()
+
+    def attempt_fileload(self):
+        self.source = self.filepath + self.file.text() + '.csv'
+        self.archive = dm.loadArchive(self.source)
+        self.table_display()
+        
+    def table_display(self):
+        if self.archive is None:
+            self.dlg_type = "Display Table Error"
+            self.dlg_status = "No Archive to Display"
+            dlg = CustomDialog(self)
+            dlg.exec()
+            self.reset_dlg()
+        
+        elif self.table is None:
+            self.table = QTableView()
+            self.model = TableModel(self.archive.loc[:, self.columns])
+            self.table.setModel(self.model)
+            self.layout.addWidget(self.table)
+
+        else:
+            self.model.layoutAboutToBeChanged.emit()
+            self.model.set_dataframe(self.archive.loc[:, self.columns])
+            self.model.layoutChanged.emit()
 
 
 # one QApplication instance per application
