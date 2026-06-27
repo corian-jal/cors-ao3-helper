@@ -47,7 +47,7 @@ def topTags(archive : pd.DataFrame, col : str) -> pd.DataFrame:
         else:
             halloffame[tag] = 1
     
-    hallofframe = pd.DataFrame(list(halloffame.items()), columns=['tag', 'count'])
+    hallofframe = pd.DataFrame(list(halloffame.items()), columns=[col, 'count'])
     return hallofframe.sort_values(by='count', ascending=False)
 
 def filterItem(archive : pd.DataFrame, col : str, val, include : bool) -> pd.DataFrame:

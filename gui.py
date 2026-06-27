@@ -85,8 +85,13 @@ class MainWindow(QMainWindow):
         self.source : str = None
         
         self.archive : dm.pd.DataFrame = None
+        self.fandom_frame : dm.pd.DataFrame = None
+        self.ship_frame : dm.pd.DataFrame = None
+        self.other_frame : dm.pd.DataFrame = None
+        self.columns : list = ['work_id', 'title', 'author', "fandoms", "ships"]
+        self.frame_col : str = "freeforms"
+        self.frame_height = 20
         self.table = None
-        self.columns : list = ['work_id', 'title', 'author']
 
         self.col_current = None
         self.search_item = None
@@ -101,7 +106,7 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
 
-        # header tab
+        # -- header tab
         l1 = QVBoxLayout()
         
         self.intro = QLabel("Meowdy! Welcome to Cor's AO3 Helper.")
@@ -119,8 +124,12 @@ class MainWindow(QMainWindow):
         self.tab1.setLayout(l1)
         self.tabs.addTab(self.tab1, "Intro")
 
-        # - login/load tab
+        # -- login/load tab
         l2 = QVBoxLayout()
+
+        self.load_blurb = QLabel("To load from AO3, all three fields are necessary. To load from file, only last is required.")
+        self.load_blurb.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        l2.addWidget(self.load_blurb)
 
         self.user = QLineEdit()
         self.user.setPlaceholderText("What's your AO3 Username?")
@@ -141,21 +150,46 @@ class MainWindow(QMainWindow):
 
         self.fileload = QPushButton("Load From Saved File Instead")
         self.fileload.clicked.connect(self.attempt_fileload)
-        l2.addWidget(self.fileload) # add feedback to know if worked
+        l2.addWidget(self.fileload)
 
         self.tab2 = QWidget()
         self.tab2.setLayout(l2)
         self.tabs.addTab(self.tab2, "Load")
 
-        # - filter item tab
+        # -- save/export
+        l3 = QVBoxLayout()
 
-        # - filter range tab
+        self.tab3 = QWidget()
+        self.tab3.setLayout(l3)
+        self.tabs.addTab(self.tab3, "Export")
+        
+        # -- filter item tab
+        l4 = QVBoxLayout()
 
-        # - sort tab
+        self.tab4 = QWidget()
+        self.tab4.setLayout(l4)
+        self.tabs.addTab(self.tab4, "Filter Item")
 
-        # - extra tab
+        # -- filter range tab
+        l5 = QVBoxLayout()
 
-        # - main window displaying stats (x of y) and list?
+        self.tab5 = QWidget()
+        self.tab5.setLayout(l5)
+        self.tabs.addTab(self.tab5, "Filter Range")
+
+        # -- sort tab
+        l6 = QVBoxLayout()
+
+        self.tab6 = QWidget()
+        self.tab6.setLayout(l6)
+        self.tabs.addTab(self.tab6, "Sort")
+
+        # -- hall of fame tab
+        self.l7 = QHBoxLayout()
+
+        self.tab7 = QWidget()
+        self.tab7.setLayout(self.l7)
+        self.tabs.addTab(self.tab7, "Hall of Frame") #this joke is for me
 
         # playing around with fields i might need
 
@@ -267,15 +301,49 @@ class MainWindow(QMainWindow):
             self.reset_dlg()
         
         elif self.table is None:
+            self.display.setText("Showing " + str(dm.countRows(self.archive)) + " works.")
             self.table = QTableView()
             self.model = TableModel(self.archive.loc[:, self.columns])
             self.table.setModel(self.model)
             self.layout.addWidget(self.table)
+            self.update_hof()
 
         else:
+            self.display.setText("Showing " + str(dm.countRows(self.archive)) + " works.")
             self.model.layoutAboutToBeChanged.emit()
             self.model.set_dataframe(self.archive.loc[:, self.columns])
             self.model.layoutChanged.emit()
+            self.update_hof()
+
+    def update_hof(self):
+        if self.fandom_frame is None:
+            self.fandom_frame = QTableView()
+            self.fandom_model = TableModel(dm.topTags(self.archive, "fandoms").head(self.frame_height))
+            self.fandom_frame.setModel(self.fandom_model)
+            self.l7.addWidget(self.fandom_frame)
+
+            self.ships_frame = QTableView()
+            self.ships_model = TableModel(dm.topTags(self.archive, "ships").head(self.frame_height))
+            self.ships_frame.setModel(self.ships_model)
+            self.l7.addWidget(self.ships_frame)
+
+            self.other_frame = QTableView()
+            self.other_model = TableModel(dm.topTags(self.archive, self.frame_col).head(self.frame_height))
+            self.other_frame.setModel(self.other_model)
+            self.l7.addWidget(self.other_frame)
+        
+        else:
+            self.fandom_model.layoutAboutToBeChanged.emit()
+            self.fandom_model.set_dataframe(dm.topTags(self.archive, "fandoms").head(self.frame_height))
+            self.fandom_model.layoutChanged.emit()
+            
+            self.ships_model.layoutAboutToBeChanged.emit()
+            self.ships_model.set_dataframe(dm.topTags(self.archive, "ships").head(self.frame_height))
+            self.ships_model.layoutChanged.emit()
+            
+            self.other_model.layoutAboutToBeChanged.emit()
+            self.other_model.set_dataframe(dm.topTags(self.archive, self.frame_col).head(self.frame_height))
+            self.other_model.layoutChanged.emit()
 
 
 # one QApplication instance per application
