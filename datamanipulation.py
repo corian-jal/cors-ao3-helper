@@ -68,9 +68,10 @@ def sortBy(archive : pd.DataFrame, col : str, asc : bool) -> pd.DataFrame:
 
 def getAllHTML(archive : pd.DataFrame) -> str:
     allhtml = archive['html']
-    page = ''
+    page = "<!DOCTYPE html>\n<html>\n<body>"
     for entry in allhtml:
-        page = page + '\n' + entry
+        page = page + '\n' + entry.replace('href="', 'href="https://archiveofourown.org')
+    page = page + "\n</body>\n</html>"
     return page
 
 def storeArchive(archive : pd.DataFrame, filename : str) -> None:
