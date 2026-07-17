@@ -53,9 +53,9 @@ def topTags(archive : pd.DataFrame, col : str) -> pd.DataFrame:
 def filterItem(archive : pd.DataFrame, col : str, val, include : bool) -> pd.DataFrame:
     # works for full and partial
     if include:
-        return archive[archive[col].str.contains(val)]
+        return archive[archive[col].str.contains(val, case=False)]
     else:
-        return archive[~(archive[col].str.contains(val))]
+        return archive[~(archive[col].str.contains(val, case=False))]
 
 def filterRange(archive : pd.DataFrame, col : str, start : int, end : int) -> pd.DataFrame:
     # inclusive
