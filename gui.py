@@ -1,5 +1,6 @@
 # import libraries
 import os
+import webbrowser
 
 # import modules
 import ao3interactions as ao3int
@@ -160,6 +161,9 @@ class MainWindow(QMainWindow):
         self.outfile = QLineEdit()
         self.outfile.setPlaceholderText("What would you like to name the export?")
         l3.addWidget(self.outfile)
+
+        self.open_now = QCheckBox("Open HTML immediately?")
+        l3.addWidget(self.open_now)
 
         self.filesave = QPushButton("Save Current Archive")
         self.filesave.clicked.connect(self.attempt_filesave)
@@ -345,11 +349,15 @@ class MainWindow(QMainWindow):
     def html_export(self):
         with open(self.filepath + self.outfile.text() + '.html', 'w', encoding='utf-8') as f:
             f.write(dm.getAllHTML(self.archive))
-        self.dlg_type = "Saved HTML"
-        self.dlg_status = "HTML should have exported; please double-check at target location."
-        dlg = CustomDialog(self)
-        dlg.exec()
-        self.reset_dlg()
+        if self.open_now.isChecked():
+            self.full_export = os.path.abspath(self.filepath + self.outfile.text() + '.html')
+            webbrowser.open_new_tab(f"file://{self.full_export}")
+        else: 
+            self.dlg_type = "Saved HTML"
+            self.dlg_status = "HTML should have exported; please double-check at target location."
+            dlg = CustomDialog(self)
+            dlg.exec()
+            self.reset_dlg()
 
     def item_filter(self):
         self.col_current = self.fi_cols.currentText()
