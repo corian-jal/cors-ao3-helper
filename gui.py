@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         # start defining window
         self.setWindowTitle("Cor's AO3 Helper")
         # self.setFixedSize(QSize(800, 600))
-        self.setMinimumSize(QSize(800, 600))
+        self.setMinimumSize(QSize(800, 1000))
 
         self.tabs = QTabWidget()
         self.tabs.setTabPosition(QTabWidget.TabPosition.North)
@@ -191,6 +191,29 @@ class MainWindow(QMainWindow):
         # -- filter range tab
         l5 = QVBoxLayout()
 
+        self.range_desc = QLabel("Enter your lower number in the top box and higher in the bottom box, inclusive.")
+        l5.addWidget(self.range_desc)
+
+        self.fr_cols = QComboBox()
+        self.fr_cols.addItems(["word_count", "kudos", "hits", "visit_num", "last_known_page"])
+        l5.addWidget(self.fr_cols)
+
+        self.low = QSpinBox()
+        self.low.setMaximum(999999999)
+        self.low.setSuffix("  min")
+        #self.low.valueChanged.connect(self.lowvalue_changed) 
+        l5.addWidget(self.low)
+
+        self.high = QSpinBox()
+        self.high.setMaximum(999999999)
+        self.high.setSuffix("  max")
+        #self.high.valueChanged.connect(self.highvalue_changed) 
+        l5.addWidget(self.high)
+
+        self.rfilter = QPushButton("Filter on Range")
+        self.rfilter.clicked.connect(self.range_filter)
+        l5.addWidget(self.rfilter)
+
         self.tab5 = QWidget()
         self.tab5.setLayout(l5)
         self.tabs.addTab(self.tab5, "Filter Range")
@@ -222,17 +245,7 @@ class MainWindow(QMainWindow):
         self.tab7.setLayout(self.l7)
         self.tabs.addTab(self.tab7, "Hall of Frame") #this joke is for me
 
-        # playing around with fields i might need
-
-        # numeric input
-        #self.low = QSpinBox()
-        #self.low.setMinimum(0)
-        #self.low.valueChanged.connect(self.lowvalue_changed) 
-
-        #self.high = QSpinBox()
-        #self.high.setMinimum(0)
-        #self.high.valueChanged.connect(self.highvalue_changed) 
-
+        # end tabs
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.tabs)
 
@@ -313,6 +326,18 @@ class MainWindow(QMainWindow):
         self.col_current = self.fi_cols.currentText()
         self.archive = dm.filterItem(self.archive, self.col_current, self.filter_item.text(), not self.exclude.isChecked())
         self.table_display()
+
+    def range_filter(self):
+        if self.low.value() > self.high.value():
+            self.dlg_type = "Filter Range Issue"
+            self.dlg_status = "Minimum was set lower than maximum."
+            dlg = CustomDialog(self)
+            dlg.exec()
+            self.reset_dlg()
+        else:
+            self.col_current = self.fr_cols.currentText()
+            self.archive = dm.filterRange(self.archive, self.col_current, self.low.value(), self.high.value())
+            self.table_display()
 
     def sort(self):
         self.col_current = self.sort_cols.currentText()
