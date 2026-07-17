@@ -157,6 +157,18 @@ class MainWindow(QMainWindow):
         # -- save/export
         l3 = QVBoxLayout()
 
+        self.outfile = QLineEdit()
+        self.outfile.setPlaceholderText("What would you like to name the export?")
+        l3.addWidget(self.outfile)
+
+        self.filesave = QPushButton("Save Current Archive")
+        self.filesave.clicked.connect(self.attempt_filesave)
+        l3.addWidget(self.filesave)
+
+        self.export = QPushButton("Export to HTML")
+        self.export.clicked.connect(self.html_export)
+        l3.addWidget(self.export)
+
         self.tab3 = QWidget()
         self.tab3.setLayout(l3)
         self.tabs.addTab(self.tab3, "Export")
@@ -321,6 +333,23 @@ class MainWindow(QMainWindow):
         self.archive = dm.loadArchive(self.source)
         self.columns = ['work_id', 'title', 'author', "fandoms", "ships"]
         self.table_display()
+
+    def attempt_filesave(self):
+        dm.storeArchive(self.archive, self.filepath + self.outfile.text() + ".csv")
+        self.dlg_type = "Saved Archive"
+        self.dlg_status = "Archive should be saved; please double-check at target location."
+        dlg = CustomDialog(self)
+        dlg.exec()
+        self.reset_dlg()
+
+    def html_export(self):
+        with open(self.filepath + self.outfile.text() + '.html', 'w', encoding='utf-8') as f:
+            f.write(dm.getAllHTML(self.archive))
+        self.dlg_type = "Saved HTML"
+        self.dlg_status = "HTML should have exported; please double-check at target location."
+        dlg = CustomDialog(self)
+        dlg.exec()
+        self.reset_dlg()
 
     def item_filter(self):
         self.col_current = self.fi_cols.currentText()
